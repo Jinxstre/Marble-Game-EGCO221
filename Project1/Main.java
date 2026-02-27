@@ -23,6 +23,7 @@ public class Main {
                 System.out.println("Please enter numbers only");
             }
         }
-        System.out.print("white marbles move --> only, black marbles move <-- only");
+        System.out.println("white marbles move --> only, black marbles move <-- only");
+        System.out.println("Initial >>");
     }
 }
