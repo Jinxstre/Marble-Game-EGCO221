@@ -59,7 +59,7 @@ public class Main {
                     break;
                 }
 
-                System.out.print("Enter marble ID to move (or 'R' to restart, 'Q' to quit): ");
+                System.out.print("Enter marble ID to move (or 'R' to restart, 'Q' to quit, 'A' to Auto): ");
                 String command = sc.nextLine().trim();
 
                 if (command.equalsIgnoreCase("Q")) {
@@ -69,6 +69,19 @@ public class Main {
                 } 
                 else if (command.equalsIgnoreCase("R")) {
                     System.out.println("\n--- Restarting Game ---\n");
+                    break;
+                }
+                else if (command.equalsIgnoreCase("A")) {
+                    Solver solver = new Solver(board);
+                    boolean found = solver.solve();
+                    if (found)
+                    {
+                        solver.printSolution();
+                    }
+                    else
+                    {
+                        System.out.println("No solution !!");
+                    }
                     break;
                 }
 
