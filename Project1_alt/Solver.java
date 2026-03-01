@@ -1,6 +1,11 @@
 package Project1;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Solver 
 {
@@ -102,11 +107,11 @@ public class Solver
         for (String marbleId : solution)
         {
             tempboard.move(marbleId);
-            System.out.printf("Auto%3d >> ",step);
+            System.out.printf("Auto %3d >> ",step);
             tempboard.printBoard();
             step++;
         }
-        System.out.println("Done !!");
+        System.out.println("\nDone !!");
     }
 
     //

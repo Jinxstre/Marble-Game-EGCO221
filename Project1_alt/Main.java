@@ -7,9 +7,10 @@ public class Main {
 
         Scanner sc = new Scanner(System.in);
         boolean isPlaying = true;
-
+        
         while (isPlaying) {
-
+            
+            
             int WhiteMarbles = 0;
 
             // 🔹 ลูปรับค่าจำนวนลูกแก้ว
@@ -34,31 +35,17 @@ public class Main {
 
             // เริ่มเกมหลังจากได้ค่าถูกต้องแล้ว
             System.out.println("white marbles move --> only, black marbles move <-- only");
-            System.out.println("Initial >>");
-
-            Board board = new Board(WhiteMarbles);
+            Board board = new Board(WhiteMarbles); 
+            System.out.print("Initial >> ");
+            board.printBoard();
+            
             int step = 1;
             boolean gameFinished = false;
 
             System.out.println("\n--- Game Started! ---");
 
             while (!gameFinished) {
-
-                System.out.print("Step " + step + " >> ");
-                board.printBoard();
-
-                if (board.isSolved()) {
-                    System.out.println("\n Congratulations! You solved the puzzle! 🎉");
-                    gameFinished = true;
-                    break;
-                }
-
-                if (!board.hasValidMoves()) {
-                    System.out.println("\n******* Game Over! No more valid moves available. *******");
-                    gameFinished = true;
-                    break;
-                }
-
+                System.out.printf("Step %3d >> ", step);
                 System.out.print("Enter marble ID to move (or 'R' to restart, 'Q' to quit, 'A' to Auto): ");
                 String command = sc.nextLine().trim();
 
@@ -69,8 +56,16 @@ public class Main {
                 } 
                 else if (command.equalsIgnoreCase("R")) {
                     System.out.println("\n--- Restarting Game ---\n");
+                    
                     break;
                 }
+                
+                if (!board.hasValidMoves()) {
+                    System.out.println("\n******* Game Over! No more valid moves available. *******");
+                    gameFinished = true;
+                    break;
+                }
+
                 else if (command.equalsIgnoreCase("A")) {
                     Solver solver = new Solver(board);
                     boolean found = solver.solve();
@@ -85,11 +80,30 @@ public class Main {
                     break;
                 }
 
-                if (board.canMove(command)) {
-                    board.move(command);
-                    step++;
-                } else {
-                    System.out.println(" Cannot move '" + command + "' or invalid ID.");
+                if (board.hasMarble(command)) 
+                {
+                    if (board.canMove(command)) {
+
+                        String moveType = board.getMoveType(command);
+                        System.out.printf("%-12s%s","", moveType);
+
+                        board.move(command);
+                        System.out.printf("\n%-12s", "");
+                        board.printBoard(); //พิมพ์หลัง Move/Jump เท่านั้น
+
+                        if (board.isSolved()) {
+                            System.out.println("\nCongratulations! You solved the puzzle!");
+                            gameFinished = true;
+                            break;
+                        } 
+                    } else {
+                        System.out.printf("%-12s%s %s\n","","Cannot move ",command);
+                    }
+                    step++; // เพิ่ม step ทันทีเมื่อ id ถูกต้อง
+                } 
+                else 
+                {
+                    System.out.printf("%-12s%s","","Invalid marble ID.");
                 }
             }
 
@@ -97,8 +111,12 @@ public class Main {
 
                 while (true) 
                 {
-                    System.out.print("\nDo you want to play again? (Y/N): ");
-                    String playAgain = sc.nextLine().trim().toUpperCase();
+
+                    
+                        System.out.print("\nDo you want to play again? (Y/N): ");
+                    
+                        String playAgain = sc.nextLine().trim().toUpperCase();
+                    
 
                     switch (playAgain) 
                     {
