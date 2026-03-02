@@ -1,4 +1,4 @@
-package Project1;
+package Project1_alt;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -21,6 +21,8 @@ public class Solver
     //Board
     private final Board tempboard;
 
+    public int Trials = 0;
+
     public Solver(Board board)
     {
         this.tempboard      = board;
@@ -32,8 +34,8 @@ public class Solver
     public boolean solve()
     {
         //Saved init state
-        visited.add(getBoardState());
-        boolean found = backtrack();
+        //visited.add(getBoardState());
+        boolean found = backtrack(false, false);
 
         if (found)
         {
@@ -53,17 +55,26 @@ public class Solver
     //
     //Find all possible solution
     //
-    private boolean backtrack()
+    private boolean backtrack(boolean Lspace, boolean Rspace)
     {
         if (tempboard.isSolved()) return true;
 
+        int emptyIdx = tempboard.getIndexOf("_");
+        int lastIdx = tempboard.marbles.size() - 1; // ตำแหน่ง 2n
+        
+        boolean currL = Lspace || (emptyIdx == 0);
+        boolean currR = Rspace || (emptyIdx == lastIdx);
+        
         //Find All moveable marble
         List<String> Moveable = new ArrayList<>();
         for (Marble m : tempboard.marbles)
         {
             if (m.getType() != '_' && tempboard.canMove(m.getId()))
             {
-                Moveable.add(m.getId());
+                if (propermove(m.getId(), currL, currR)) 
+                {
+                    Moveable.add(m.getId());
+                }
             }
         }
 
@@ -73,15 +84,21 @@ public class Solver
             tempboard.move(marbleId);
             String state = getBoardState();
 
+            if (Trials%1000000==0)
+            {
+                System.out.println("Trials : " + Trials/1000000 + " M"); 
+            }
+            Trials++;   
+
             //Compare from previous to make sure there is no repeat
             if (!visited.contains(state))
             {
-                visited.add(state);
+                //visited.add(state);
                 prevMove.push(marbleId);
 
-                if (backtrack()) return true;
+                if (backtrack(currL, currR)) return true;
 
-                //Stuck. get last step out
+                //Get last step out When Stuck
                 prevMove.pop();
             }
 
@@ -97,12 +114,8 @@ public class Solver
     //
     public void printSolution()
     {
-        if (solution == null)
-        {
-            System.out.println("No solution !!");
-            return;
-        }
-
+        System.out.printf("initial  >> ");
+        tempboard.printBoard();
         int step = 1;
         for (String marbleId : solution)
         {
@@ -112,6 +125,8 @@ public class Solver
             step++;
         }
         System.out.println("\nDone !!");
+        System.out.printf("Trials : %,d",Trials);
+        System.out.println("MarNum : " + (tempboard.marbles.size() - 1)/2);
     }
 
     //
@@ -122,9 +137,35 @@ public class Solver
         StringBuilder sb = new StringBuilder();
         for (Marble m : tempboard.marbles)
         {
-            sb.append(m.getId());
+            sb.append(m.getType());
         }
         return sb.toString();
     }
 
+    private boolean propermove(String id, boolean Lspace, boolean Rspace)
+    {
+        if (Lspace && Rspace) return true;
+
+        int idx = tempboard.getIndexOf(id);
+        int emptyIdx = tempboard.getIndexOf("_");
+        char type = tempboard.marbles.get(idx).getType();
+
+        if (type == 'w') {
+            if (emptyIdx + 1 < tempboard.marbles.size()) {
+                char front = tempboard.marbles.get(emptyIdx + 1).getType();
+                if (front == 'w') {
+                    return false; 
+                }
+            }
+        } else if (type == 'b') {
+            if (emptyIdx - 1 >= 0) {
+                char front = tempboard.marbles.get(emptyIdx - 1).getType();
+                if (front == 'b') {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 }
