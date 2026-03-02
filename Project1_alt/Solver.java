@@ -7,127 +7,165 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class Solver {
-    private final ArrayDeque<String> prevMove; // เก็บประวัติการเดินหมาก
-    private final Set<String> visited;         // เก็บสถานะที่เคยผ่านมาแล้ว
-    private List<String> solution;             // ลำดับคำตอบสุดท้าย
-    private final Board tempboard;             // ตัวแปรอ้างอิงกระดาน
+public class Solver 
+{
+    //Use record move during search
+    private final ArrayDeque<String> prevMove;
 
-    public int Trials = 0; // นับจำนวนครั้งที่พยายาม
+    //Saved format that have been seen
+    private final Set<String> visited;
 
-    public Solver(Board board) {
-        this.tempboard = board;
-        this.prevMove = new ArrayDeque<>();
-        this.visited = new HashSet<>();
-        this.solution = null;
+    //Final Solution
+    private List<String> solution;
+
+    //Board
+    private final Board tempboard;
+
+    public int Trials = 0;
+
+    public Solver(Board board)
+    {
+        this.tempboard      = board;
+        this.prevMove       = new ArrayDeque<>();
+        this.visited        = new HashSet<>();
+        this.solution       = null;
     }
 
-    public boolean solve() {
-        // เริ่มต้นส่งค่าสถานะการแตะขอบ (Lspace, Rspace) เป็น false
+    public boolean solve()
+    {
+        //Saved init state
+        visited.add(getBoardState());
         boolean found = backtrack(false, false);
 
-        if (found) {
+        if (found)
+        {
+            //Take order from prevMove
             solution = new ArrayList<>(prevMove);
             Collections.reverse(solution);
 
-            // คืนค่ากระดานกลับสู่สถานะเริ่มต้น
+            //Get Board back to initial state
             for (String marbleId : prevMove) {
                 tempboard.undoMove(marbleId);
             }
         }
+
         return found;
     }
 
-    private boolean backtrack(boolean lTouched, boolean rTouched) {
-        if (tempboard.isSolved()) return true; //
+    //
+    //Find all possible solution
+    //
+    private boolean backtrack(boolean Lspace, boolean Rspace)
+    {
+        if (tempboard.isSolved()) return true;
 
         int emptyIdx = tempboard.getIndexOf("_");
         int lastIdx = tempboard.marbles.size() - 1; // ตำแหน่ง 2n
-
-        // อัปเดตสถานะ "Ready to Solve" เมื่อช่องว่างไปแตะขอบตามที่คุณสังเกต
-        boolean currentL = lTouched || (emptyIdx == 0);
-        boolean currentR = rTouched || (emptyIdx == lastIdx);
-
-        List<String> moveable = new ArrayList<>();
-        for (Marble m : tempboard.marbles) {
-            // เช็คว่าหินตัวนี้ขยับได้ตามกฎ และผ่านกฎ Pruning (WW/BB) หรือไม่
-            if (m.getType() != '_' && tempboard.canMove(m.getId())) {
-                if (isSafeMove(m.getId(), currentL, currentR)) {
-                    moveable.add(m.getId());
+        
+        boolean currL = Lspace || (emptyIdx == 0);
+        boolean currR = Rspace || (emptyIdx == lastIdx);
+        
+        //Find All moveable marble
+        List<String> Moveable = new ArrayList<>();
+        for (Marble m : tempboard.marbles)
+        {
+            if (m.getType() != '_' && tempboard.canMove(m.getId()))
+            {
+                if (propermove(m.getId(), currL, currR)) 
+                {
+                    Moveable.add(m.getId());
                 }
             }
         }
 
-        for (String marbleId : moveable) {
+        //Try each one
+        for (String marbleId : Moveable)
+        {
             tempboard.move(marbleId);
             String state = getBoardState();
-            
-            Trials++; // นับจำนวนครั้ง
 
-            if (!visited.contains(state)) {
+            if (Trials%1000000==0)
+            {
+                System.out.println("Trials : " + Trials/1000000 + " M"); 
+            }
+            Trials++;   
+
+            //Compare from previous to make sure there is no repeat
+            if (!visited.contains(state))
+            {
                 visited.add(state);
                 prevMove.push(marbleId);
 
-                // ส่งค่าสถานะ L/R ต่อไปในชั้นถัดไป
-                if (backtrack(currentL, currentR)) return true;
+                if (backtrack(currL, currR)) return true;
 
+                //Get last step out When Stuck
                 prevMove.pop();
             }
+
+            //Undo last step
             tempboard.undoMove(marbleId);
         }
 
         return false;
     }
 
-    // กฎ Pruning ที่คุณค้นพบ: ห้ามหินพวกเดียวกันติดกันจนกว่าจะถึงช่วงจบเกม
-    private boolean isSafeMove(String id, boolean L, boolean R) {
-        if (L || R) return true; // ถ้าแตะขอบแล้ว ให้ยกเลิกกฎห้ามติดกัน
-
-        int idx = tempboard.getIndexOf(id);
-        int emptyIdx = tempboard.getIndexOf("_");
-        char type = tempboard.marbles.get(idx).getType();
-        int lastIdx = tempboard.marbles.size() - 1;
-
-        if (type == 'w') {
-            if (emptyIdx + 1 <= lastIdx) {
-                // ห้ามขาวขยับไปจอดติดขาว
-                if (tempboard.marbles.get(emptyIdx + 1).getType() == 'w') return false;
-            }
-        } else if (type == 'b') {
-            if (emptyIdx - 1 >= 0) {
-                // ห้ามดำขยับไปจอดติดดำ
-                if (tempboard.marbles.get(emptyIdx - 1).getType() == 'b') return false;
-            }
-        }
-        return true;
-    }
-
-    // ปรับปรุงการเก็บสถานะให้ประหยัด Memory สำหรับ n=100
-    private String getBoardState() {
-        StringBuilder sb = new StringBuilder();
-        for (Marble m : tempboard.marbles) {
-            sb.append(m.getType()); // เก็บแค่ประเภท 'w', 'b', '_'
-        }
-        return sb.toString();
-    }
-
-    public void printSolution() {
-        if (solution == null) {
-            System.out.println("No solution !!");
-            return;
-        }
-
-        System.out.print("initial  >> ");
+    //
+    //Used to print results of solving
+    //
+    public void printSolution()
+    {
+        System.out.printf("initial  >> ");
         tempboard.printBoard();
         int step = 1;
-        for (String marbleId : solution) {
+        for (String marbleId : solution)
+        {
             tempboard.move(marbleId);
-            System.out.printf("Move >> %5s   Auto %3d >> ", marbleId, step);
+            System.out.printf("Auto %3d >> ",step);
             tempboard.printBoard();
             step++;
         }
         System.out.println("\nDone !!");
-        System.out.println("Total Trials: " + Trials);
-        System.out.println("Total Steps: " + solution.size());
+        System.out.printf("Trials : %,d\n",Trials);
+        System.out.println("MarNum : " + (tempboard.marbles.size() - 1)/2);
+    }
+
+    //
+    //Make board to string. For easier comparing
+    //
+    private String getBoardState()
+    {
+        StringBuilder sb = new StringBuilder();
+        for (Marble m : tempboard.marbles)
+        {
+            sb.append(m.getType());
+        }
+        return sb.toString();
+    }
+
+    private boolean propermove(String id, boolean Lspace, boolean Rspace)
+    {
+        if (Lspace && Rspace) return true;
+
+        int idx = tempboard.getIndexOf(id);
+        int emptyIdx = tempboard.getIndexOf("_");
+        char type = tempboard.marbles.get(idx).getType();
+
+        if (type == 'w') {
+            if (emptyIdx + 1 < tempboard.marbles.size()) {
+                char front = tempboard.marbles.get(emptyIdx + 1).getType();
+                if (front == 'w') {
+                    return false; 
+                }
+            }
+        } else if (type == 'b') {
+            if (emptyIdx - 1 >= 0) {
+                char front = tempboard.marbles.get(emptyIdx - 1).getType();
+                if (front == 'b') {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }
