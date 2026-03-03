@@ -56,6 +56,12 @@ public class Solver
         
         boolean currL = Lspace || (emptyIdx == 0);
         boolean currR = Rspace || (emptyIdx == lastIdx);
+
+        if (currL && currR) 
+        {
+            generateEndgameMoves();
+            return true;
+        }
         
         //Find All moveable marble
         List<String> Moveable = new ArrayList<>();
@@ -74,14 +80,14 @@ public class Solver
         for (String marbleId : Moveable)
         {
             tempboard.move(marbleId);
-            int gate = 1000000;
+            prevMove.push(marbleId);
+            
+            /*int gate = 100;
             if (Trials%gate==0)
             {
                 System.out.println("Trials : " + Trials/gate + " M"); 
-            }
+            }*/
             Trials++;   
-
-            prevMove.push(marbleId);
 
             if (backtrack(currL, currR)) return true;
 
@@ -113,6 +119,7 @@ public class Solver
         System.out.println("\nDone !!");
         System.out.printf("Trials : %,d\n",Trials);
         System.out.println("MarNum : " + (tempboard.marbles.size() - 1)/2);
+        System.out.println("Steps  : " + (step-1));
     }
 
     private boolean propermove(String id, boolean Lspace, boolean Rspace)
@@ -140,5 +147,48 @@ public class Solver
         }
 
         return true;
+    }
+
+    private void generateEndgameMoves() 
+    {
+        int emptyIdx = tempboard.getIndexOf("_");
+        int lastIdx  = tempboard.marbles.size() - 1;
+
+        if (emptyIdx == 0) 
+        {
+            while(!tempboard.isSolved())
+            {
+                moveAllOfType('b');
+                moveAllOfType('w');
+            }
+        } 
+        else if (emptyIdx == lastIdx) 
+        {
+            while(!tempboard.isSolved())
+            {
+                moveAllOfType('w');
+                moveAllOfType('b');
+            }
+        }
+    }
+
+    private void moveAllOfType(char type) 
+    {
+        boolean moved = true;
+        while (moved) 
+        {
+            moved = false;
+            for (Marble m : tempboard.marbles) 
+            {
+                if (m.getType() == type && tempboard.canMove(m.getId())) 
+                {
+                    tempboard.move(m.getId());
+                    prevMove.push(m.getId());
+                    Trials++;
+                    moved = true;
+                    break;  // restart scan after each move
+                }
+            }
+        }
     }
 }
