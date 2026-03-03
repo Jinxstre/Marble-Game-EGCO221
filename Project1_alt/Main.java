@@ -91,6 +91,12 @@ public class Main {
                             gameFinished = true;
                             break;
                         }
+                        if (!board.hasValidMoves()) 
+                        {
+                            System.out.println("\n******* Game Over! No more valid moves available. *******");
+                            gameFinished = true;
+                            break;
+                        }
                     } else {
                         System.out.printf("%12s%s%s\n", "", "Cannot move ", command);
                     }
