@@ -3,17 +3,12 @@ package Project1_alt;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Solver 
 {
     //Use record move during search
     private final ArrayDeque<String> prevMove;
-
-    //Saved format that have been seen
-    private final Set<String> visited;
 
     //Final Solution
     private List<String> solution;
@@ -27,14 +22,11 @@ public class Solver
     {
         this.tempboard      = board;
         this.prevMove       = new ArrayDeque<>();
-        this.visited        = new HashSet<>();
         this.solution       = null;
     }
 
     public boolean solve()
     {
-        //Saved init state
-        visited.add(getBoardState());
         boolean found = backtrack(false, false);
 
         if (found)
@@ -82,25 +74,19 @@ public class Solver
         for (String marbleId : Moveable)
         {
             tempboard.move(marbleId);
-            String state = getBoardState();
-
-            if (Trials%1000000==0)
+            int gate = 1000000;
+            if (Trials%gate==0)
             {
-                System.out.println("Trials : " + Trials/1000000 + " M"); 
+                System.out.println("Trials : " + Trials/gate + " M"); 
             }
             Trials++;   
 
-            //Compare from previous to make sure there is no repeat
-            if (!visited.contains(state))
-            {
-                visited.add(state);
-                prevMove.push(marbleId);
+            prevMove.push(marbleId);
 
-                if (backtrack(currL, currR)) return true;
+            if (backtrack(currL, currR)) return true;
 
-                //Get last step out When Stuck
-                prevMove.pop();
-            }
+            //Get last step out When Stuck
+            prevMove.pop();
 
             //Undo last step
             tempboard.undoMove(marbleId);
@@ -127,19 +113,6 @@ public class Solver
         System.out.println("\nDone !!");
         System.out.printf("Trials : %,d\n",Trials);
         System.out.println("MarNum : " + (tempboard.marbles.size() - 1)/2);
-    }
-
-    //
-    //Make board to string. For easier comparing
-    //
-    private String getBoardState()
-    {
-        StringBuilder sb = new StringBuilder();
-        for (Marble m : tempboard.marbles)
-        {
-            sb.append(m.getType());
-        }
-        return sb.toString();
     }
 
     private boolean propermove(String id, boolean Lspace, boolean Rspace)
