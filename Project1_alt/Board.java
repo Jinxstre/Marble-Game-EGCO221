@@ -13,6 +13,7 @@ public class Board
         initializeBoard();
     }
     
+    // สร้างขนาดของกระดานตามจำนวนที่ผู้เล่นต้องการ
     private void initializeBoard() 
     {
         marbles = new ArrayList<>();
@@ -21,6 +22,7 @@ public class Board
         for (int i = 0; i < n; i++) marbles.add(new Marble("b" + i, 'b'));
     }
     
+    // หาตำแหน่งของ Marbles จาก ID ที่ผู้เล่นป้อน
     public int getIndexOf(String id) 
     {
         for (int i = 0; i < marbles.size(); i++)
@@ -59,16 +61,16 @@ public class Board
         return false; //ถ้าเงื่อนไขการเคลื่อนที่ไม่ตรงกับกรณีใดๆ ที่กำหนดไว้สำหรับสีขาวและสีดำ หมายความว่า marble id ที่ระบุไม่สามารถเคลื่อนที่ได้ตามกฎของเกม ดังนั้นจึงคืนค่า false
     }
 
-
-    public void move(String id)
+    /* Function สร้างมาเพื่อสลับตำแหน่ง marbles */
+    public void move(String id) 
     {
-        if (canMove(id)) 
+        if (canMove(id)) // เช็คว่าก้อนหินสามารถ move ได้ไหม
         {
             int marbleIdx = getIndexOf(id);
             int emptyIdx = getIndexOf("_");
-            Marble temp = marbles.get(marbleIdx);
-            marbles.set(marbleIdx, marbles.get(emptyIdx));
-            marbles.set(emptyIdx, temp);
+            Marble temp = marbles.get(marbleIdx);           //
+            marbles.set(marbleIdx, marbles.get(emptyIdx));  // 3 บรรทัดนี้ทำหน้าที่สลับก้อนหินกันใน Arraylist
+            marbles.set(emptyIdx, temp);                    //
         }
     }
 
@@ -102,12 +104,12 @@ public class Board
     {
         for (int i = 0; i < n; i++) 
         {
-            if (marbles.get(i).getType() != 'b') return false; 
+            if (marbles.get(i).getType() != 'b') return false;  // ครึ่งกระดานฝั่งซ้านต้องเป็น "b"
         }
-        if (marbles.get(n).getType() != '_') return false;
+        if (marbles.get(n).getType() != '_') return false;      // ตรงกลางกระดานต้องเป็น "_"
         for (int i = n + 1; i < marbles.size(); i++)
         {
-            if (marbles.get(i).getType() != 'w') return false;
+            if (marbles.get(i).getType() != 'w') return false;  // ครึ่งกระดานฝั่งขวาต้องเป็น "w"
         }
         return true;
     }
