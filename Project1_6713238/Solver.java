@@ -84,6 +84,16 @@ public class Solver
             }
         }
 
+        if (Moveable.isEmpty())
+        {
+            System.out.println("Forward Step");
+            System.out.print("Board : ");
+            tempboard.printBoard();
+            printStack();
+            System.out.println();
+            return false;
+        }
+
         //Try each one
         for (String marbleId : Moveable)
         {
@@ -91,14 +101,27 @@ public class Solver
             prevMove.push(marbleId);
 
             Trials++;   
+            
+            //Show each step of forward and backtracking
+            System.out.println("Forward Step");
+            System.out.print("Board : ");
+            tempboard.printBoard();
+            printStack();
+            System.out.println();
 
             if (backtrack(currL, currR)) return true;
+
+            System.out.println("Backtracking Step");
 
             //Get last step out When Stuck
             prevMove.pop();
 
             //Undo last step
             tempboard.undoMove(marbleId);
+            System.out.print("Board : ");
+            tempboard.printBoard();
+            printStack();
+            System.out.println();
         }
 
         return false;
@@ -123,6 +146,17 @@ public class Solver
         System.out.printf("Trials : %,d\n",Trials);
         System.out.println("MarNum : " + (tempboard.marbles.size() - 1)/2);
         System.out.println("Steps  : " + (step-1));
+    }
+
+    //For showing ArrayDeque (Stack)
+    private void printStack()
+    {
+        System.out.print("Stack : [");
+        for (String s : prevMove)
+        {
+            System.out.print(s + " ");
+        }
+        System.out.println("]");
     }
 
     //
@@ -197,6 +231,14 @@ public class Solver
                     tempboard.move(m.getId());
                     prevMove.push(m.getId());
                     Trials++;
+
+                    //Show forward step
+                    System.out.println("Forward Step");
+                    System.out.print("Board : ");
+                    tempboard.printBoard();
+                    printStack();
+                    System.out.println();
+                    
                     moved = true;
                     break;  // restart scan after each move
                 }
